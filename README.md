@@ -1,4 +1,4 @@
-# Roblox Signal
+# Simple Roblox Signal
 Simple Roblox Signal Library  
 Mimics the behavior of default roblox RBXScriptSignals (such as BindableEvents), but without creating instances!  
 *And a few more features on top of that.*  
