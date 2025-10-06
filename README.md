@@ -66,4 +66,7 @@ fireFunc("Hello", "World", "!")
 ```
 
 ### Destroying the Signal
-Destroying is also simple, as it's just one function: `newSignal:Destroy()`
+Destroying is also simple, as it's just one function:
+```luau
+destroyFunc()
+```
