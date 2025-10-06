@@ -19,7 +19,7 @@ export type Signal = {
 	Connect: (self: Signal, func: (any) -> ()) -> Connection,
 	ConnectParallel: (self: Signal, func: (any) -> ()) -> Connection,
 	Once: (self: Signal, func: (any) -> ()) -> Connection,
-	Wait: (self: Signal, waitTime: number?) -> any
+	Wait: (self: Signal, timeOut: number?) -> any
 }
 export type Connection = {
 	Disconnect: (self: Connection) -> (),
@@ -122,7 +122,7 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		return connection
 	end
 
-	local function connectAndWait(self: Signal, waitTime: number?): any
+	local function connectAndWait(self: Signal, timeOut: number?): any
 		local called: boolean
 		local returnedValues: {any}
 
@@ -132,7 +132,7 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		end)
 
 		local waitedTime = 0
-		while not called and (waitTime and waitedTime < waitTime) do
+		while not called and (timeOut and waitedTime < timeOut) do
 			waitedTime += RunService.Heartbeat:Wait()
 		end
 
