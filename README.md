@@ -47,14 +47,14 @@ end)
 ```
 
 **Using :Wait()**  
-Syntax: `:Connect(waitTime: number?) -> any`
+Syntax: `:Connect(timeOut: number?) -> any`
 ```luau
--- Now this one works the same as the default roblox one, however it has a "waitTime" parameter.
+-- Now this one works the same as the default roblox one, however it has a "timeOut" parameter.
+local returnedA, returnedB, returnedC = newSignal:Wait(10)
+
 -- This can be used, like in :WaitForChild(), to automatically stop the yielding after a set time.
 -- This is useful avoid infinite yields, that sometimes occur from the default :Wait(),
 -- in some specific scenarios.
-
-local returnedA, returnedB, returnedC = newSignal:Wait(10)
 ```
 
 ### Firing the Signal
