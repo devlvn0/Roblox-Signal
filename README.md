@@ -35,6 +35,20 @@ local newConnection = newSignal:ConnectParallel(function(...)
     -- Do some more stuff
 end)
 ```
+
+**Using :ConnectCondition()**  
+Syntax: `:Connect(condition: T, func: (any) -> ()) -> Connection`
+```luau
+-- Basically the same as :Connect() but with an additional condition argument
+-- Will automatically disconnect the function when the condition is true
+-- Directly setting it to true will work like :Once()
+
+local num = 0
+local newConnection = newSignal:ConnectCondition(num >= 10, function(...)
+    num += 1
+    -- Do some more stuff
+end)
+```
   
 **Using :Once()**  
 Syntax: `:Once(func: (any) -> ()) -> Connection`  
@@ -47,7 +61,7 @@ end)
 ```
 
 **Using :Wait()**  
-Syntax: `:Connect(timeOut: number?) -> any`
+Syntax: `:Wait(timeOut: number?) -> any`
 ```luau
 -- Now this one works the same as the default roblox one, however it has a "timeOut" parameter.
 local returnedA, returnedB, returnedC = newSignal:Wait(10)
