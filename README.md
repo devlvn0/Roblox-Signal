@@ -30,7 +30,7 @@ end)
 Syntax: `:ConnectParallel(func: (any) -> ()) -> Connection`  
 ```luau
 -- Basically the same as :Connect() but for running code in parallel luau
-local newConnection = newSignal:Connect(function(...)
+local newConnection = newSignal:ConnectParallel(function(...)
     print("Hello World!", ...)
     -- Do some more stuff
 end)
