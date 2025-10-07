@@ -7,7 +7,7 @@ Authors: devlvn
 Created: 06/10/2025
 Description: Small and fast library for creating signals. Nearly identical to roblox' RBXScriptSignal.
 
-Version: 1.0.0
+Version: 1.1.0
 
 ]]
 
@@ -18,6 +18,7 @@ local RunService = game:GetService("RunService")
 export type Signal = {
 	Connect: (self: Signal, func: (any) -> ()) -> Connection,
 	ConnectParallel: (self: Signal, func: (any) -> ()) -> Connection,
+	ConnectCondition: <T>(self: Signal, condition: T, func: (any) -> ()) -> Connection,
 	Once: (self: Signal, func: (any) -> ()) -> Connection,
 	Wait: (self: Signal, timeOut: number?) -> any
 }
@@ -43,8 +44,9 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 	local destroyed: boolean
 	local firing: boolean
 
+	-- Internal Connect Function
 	local function internalConnection(self: Signal, func: (any) -> ()): InternalConnection
-		assert(destroyed, "Signal was destroyed, can't create any new connections!")
+		assert(destroyed ~= true, "Signal was destroyed, can't create any new connections!")
 		
 		local newConnection: InternalConnectionData = {
 			func = func,
@@ -78,6 +80,7 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		}
 	end
 
+	-- Connects a function to a signal
 	local function connect(self: Signal, func: (any) -> ()): Connection
 		local connFuncs = internalConnection(self, func)
 
@@ -86,16 +89,16 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		}
 	end
 
+	-- Connects a function to a signal and executes it in parallel
 	local function connectParallel(self: Signal, func: (any) -> ()): Connection
-		local keepRunning = true
 		local returnedValues: {}
 
 		local execCoroutine: thread = coroutine.create(function()
-			while keepRunning do
+			task.desynchronize()
+			while true do
 				coroutine.yield()
 				task.desynchronize()
 				func()
-				task.synchronize()
 			end
 		end)
 
@@ -113,11 +116,25 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		}
 	end
 
+	-- Connects a function to a signal, automatically disconnects it once the signal fired
 	local function connectOnce(self: Signal, func: (any) -> ()): Connection
 		local connection: Connection
 		connection = connect(self, function(...)
 			func(...)
 			connection:Disconnect()
+		end)
+		return connection
+	end
+	
+	-- Connects a function to a signal, automatically disconnects it when a set condition reaches true
+	local function connectCondition<T>(self: Signal, condition: T, func: (any) -> ()): Connection
+		local connection: Connection
+		connection = connect(self, function(...)
+			func(...)
+			
+			if condition then
+				connection:Disconnect()
+			end
 		end)
 		return connection
 	end
@@ -172,6 +189,7 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 	return {
 		Connect = connect,
 		ConnectParallel = connectParallel,
+		ConnectCondition = connectCondition,
 		Once = connectOnce,
 		Wait = connectAndWait,
 	}, fire, destroy
