@@ -27,6 +27,7 @@ end)
   
   
 **Using :ConnectParallel()**  
+*Not sure if this works though*  
 Syntax: `:ConnectParallel(func: (any) -> ()) -> Connection`  
 ```luau
 -- Basically the same as :Connect() but for running code in parallel luau
@@ -70,6 +71,30 @@ local returnedA, returnedB, returnedC = newSignal:Wait(10)
 -- This is useful avoid infinite yields, that sometimes occur from the default :Wait(),
 -- in some specific scenarios.
 ```
+
+### Disconnecting a Signal Connection
+Syntax: `:Disconnect() -> ()`
+```luau
+-- Works exactly like roblox' Signals.
+local connection = newSignal:Connect(function()
+    -- Do anything
+end)
+
+connection:Disconnect()
+```
+
+Syntax: `:Destroy() -> ()`
+```luau
+-- Just a synonym for :Disconnect(). Used for useful libraries like Janitor,
+-- so that you dont need to specify which function to run.
+local connection = newSignal:Connect(function()
+    -- Do anything
+end)
+
+connection:Disconnect()
+```
+
+*Maybe add a timed disconnect at some point?*
 
 ### Firing the Signal
 Firing the signal is really easy, as it works the same way as the default roblox one.
