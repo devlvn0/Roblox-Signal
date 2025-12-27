@@ -1,5 +1,4 @@
 --!strict
-
 --[[
 
 Name: Signal
@@ -7,7 +6,7 @@ Authors: devlvn
 Created: 06/10/2025
 Description: Small and fast library for creating signals. Nearly identical to roblox' RBXScriptSignal.
 
-Version: 1.1.0
+Version: 1.2.0
 
 ]]
 
@@ -20,7 +19,7 @@ export type Signal = {
 	ConnectParallel: (self: Signal, func: (any) -> ()) -> Connection,
 	ConnectCondition: <T>(self: Signal, condition: T, func: (any) -> ()) -> Connection,
 	Once: (self: Signal, func: (any) -> ()) -> Connection,
-	Wait: (self: Signal, timeOut: number?) -> any
+	Wait: (self: Signal, timeOut: number?) -> any,
 }
 export type Connection = {
 	Disconnect: (self: Connection) -> (),
@@ -37,7 +36,7 @@ type InternalConnectionData = {
 -- Signal
 local signal = {}
 
-function signal.new(): (Signal, (any) -> (), () -> ())
+function signal.new(): (Signal?, (any) -> (), () -> ())
 	local functions: {[(any) -> ()]: InternalConnectionData} = {}
 	local waitingFunctions: {[(any) -> ()]: InternalConnectionData} = {}
 
@@ -47,7 +46,7 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 	-- Internal Connect Function
 	local function internalConnection(self: Signal, func: (any) -> ()): InternalConnection
 		assert(destroyed ~= true, "Signal was destroyed, can't create any new connections!")
-		
+
 		local newConnection: InternalConnectionData = {
 			func = func,
 			disconnected = false,
@@ -86,10 +85,11 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 
 		return {
 			Disconnect = connFuncs.Disconnect,
+			Destroy = connFuncs.Disconnect, -- Added for the Janitor library
 		}
 	end
 
-	-- Connects a function to a signal and executes it in parallel
+	-- Connects a function to a signal and executes it in parallel (dont even know if this works)
 	local function connectParallel(self: Signal, func: (any) -> ()): Connection
 		local returnedValues: {}
 
@@ -106,11 +106,11 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 			returnedValues = {...}
 			coroutine.resume(execCoroutine)
 		end)
-		
+
 		connection:ConnectToDisconnection(function()
 			coroutine.close(execCoroutine)
 		end)
-		
+
 		return {
 			Disconnect = connection.Disconnect,
 		}
@@ -125,13 +125,13 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		end)
 		return connection
 	end
-	
+
 	-- Connects a function to a signal, automatically disconnects it when a set condition reaches true
 	local function connectCondition<T>(self: Signal, condition: T, func: (any) -> ()): Connection
 		local connection: Connection
 		connection = connect(self, function(...)
 			func(...)
-			
+
 			if condition then
 				connection:Disconnect()
 			end
@@ -186,13 +186,27 @@ function signal.new(): (Signal, (any) -> (), () -> ())
 		table.clear(waitingFunctions)
 	end
 
-	return {
+	local returnTable = {
 		Connect = connect,
 		ConnectParallel = connectParallel,
 		ConnectCondition = connectCondition,
 		Once = connectOnce,
 		Wait = connectAndWait,
-	}, fire, destroy
+	}
+
+	local prox = newproxy(true)
+	local meta = getmetatable(prox)
+
+	meta.__index = function<T,K,V>(self: T, index: K): V?
+		if not returnTable[index] then
+			return nil
+		end
+
+		return returnTable[index]
+	end
+	meta.__metatable = "This metatable is locked"
+
+	return prox, fire, destroy
 end
 
 return signal
